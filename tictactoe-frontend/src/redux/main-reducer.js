@@ -1,15 +1,15 @@
-import * as axios from 'axios'
-import { toFilterBoardArray } from '../utils';
-
 const SET_CELLS_COUNT = "SET_CELLS_COUNT";
 const SET_TURN = "SET_TURN";
+const SET_USERS = "SET_USERS";
 const SET_FOR_SIGN_IN = "SET_FOR_SIGN_IN";
+const SET_RESULT = "SET_RESULT";
 
 const initialState = {
     cellsArray: null,
     turn: null,
     isAuth: false,
-    seconds: null
+    users: [],
+    result: null
 };
 
 export const mainReducer = (state = initialState, action) => {
@@ -29,6 +29,16 @@ export const mainReducer = (state = initialState, action) => {
                 ...state,
                 isAuth: action.isAuth
             }
+        case SET_USERS: 
+            return {
+                ...state,
+                users: action.users
+            }
+        case SET_RESULT: 
+            return {
+                ...state,
+                result: action.result
+            }
         default:
             return state;
     }
@@ -37,18 +47,7 @@ export const mainReducer = (state = initialState, action) => {
 export const setCellsAC = (cellsArray) => ({type: SET_CELLS_COUNT, cellsArray})
 export const setForSignInAC = (isAuth) => ({type: SET_FOR_SIGN_IN, isAuth})
 export const setTurnAC = (turn) => ({type: SET_TURN, turn})
-
-
-// export const getBoardData = () => {
-//     return (dispatch) => {
-//         axios.get(`${process.env.REACT_APP_WS_HOST}/board`).then(res => {
-//             if (res.data.boardArray) {
-//                 dispatch(setCellsAC(toFilterBoardArray(res.data.boardArray)))
-//             }
-//         })
-        
-//     }
-// }   
-
+export const setUsersAC = (users) => ({type: SET_USERS, users})
+export const setResultAC = (result) => ({type: SET_RESULT, result})
 
 

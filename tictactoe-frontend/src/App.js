@@ -3,32 +3,33 @@ import './App.css';
 import { BorderPart } from './components/border';
 import { FormPart } from './components/formpart';
 import { connect } from 'react-redux'
-import { setCellsAC, setTurnAC, setForSignInAC } from './redux/main-reducer';
+import { setCellsAC, setTurnAC, setForSignInAC, setUsersAC, setResultAC } from './redux/main-reducer';
 import { InfoAboutGame } from './components/infoaboutgame';
 import { SignInPart } from './components/signinpart';
 import { Disconnect } from './components/disconnect';
+import { StartNewGame } from './components/startnewgame';
 
 
-function App({cellsArray, setCells, socket, setTurn, turn , isAuth, setForSignIn}) {
+function App({cellsArray, setCells, socket, setTurn, turn , isAuth, result, setForSignIn, setUsers, setResult}) {
   const [isDisconnected, setToDisconnect] = useState(false);
   useEffect(() => {
     socket.on('connect', () => {
       console.log("user connected")
+      console.log(socket);
     });
    socket.on('disconnect_excessive', () => {
-    setToDisconnect(true);
+     setToDisconnect(true);
     socket.close()
    })
     socket.on('the_last_emit', (data) => {
-      if (data.userId) {
-        alert(`user ${data.userId} wins`)
+      if (data.user) {
+        setResult(`user ${data.user.nickname} wins`)
       } else {
-        alert('draw')
+        setResult('draw')
       }
     })
     socket.on('opponent_disconnected', () => {
-      alert("your opponent was disconnected")
-      window.location.reload()
+      setResult("your opponent has left the match")
     })
     socket.on('disconnect', () => {
       console.log("user disconnected")
@@ -44,13 +45,13 @@ function App({cellsArray, setCells, socket, setTurn, turn , isAuth, setForSignIn
         <Disconnect /> 
         :
         !isAuth ?
-        <SignInPart setForSignIn={setForSignIn} socket={socket}/>
+        <SignInPart setForSignIn={setForSignIn} socket={socket} setCells={setCells} />
         :
         !cellsArray ? 
-        <FormPart setCells={setCells} socket={socket} />
+        <FormPart setCells={setCells} socket={socket} setUsers={setUsers} />
         :
         <>
-          <InfoAboutGame turn={turn} />
+          <InfoAboutGame turn={turn} result={result} />
           <BorderPart 
               cellsArray={cellsArray} 
               setCells={setCells} 
@@ -58,6 +59,7 @@ function App({cellsArray, setCells, socket, setTurn, turn , isAuth, setForSignIn
               turn={turn}
               setTurn={setTurn}
               />
+          {result && <StartNewGame/>}              
         </>
       }  
     </div>
@@ -69,14 +71,17 @@ const mapStateToProps = (state) => {
     cellsArray: state.main.cellsArray,
     turn: state.main.turn,
     isAuth: state.main.isAuth,
-    seconds: state.main.seconds
+    result: state.main.result
   }
 }
+
 export default connect(
   mapStateToProps,
   {
     setCells: setCellsAC,
     setTurn: setTurnAC,
-    setForSignIn: setForSignInAC
+    setForSignIn: setForSignInAC,
+    setUsers: setUsersAC,
+    setResult: setResultAC
   }
   )(App)

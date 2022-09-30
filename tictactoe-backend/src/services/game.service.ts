@@ -1,38 +1,37 @@
 import { Position } from '../interfaces/position';
 import { Board } from '../interfaces/board';
 import {cacheService, CacheService} from "./cache.service";
-import {v4} from "uuid";
 
 export class GameService {
-    private gameId: string;
     private users: any;
     private readonly cacheService: CacheService;
     constructor(cacheService: CacheService) {
-        this.users = {};
-        this.gameId = '';
+        this.users = [];
         this.cacheService = cacheService;
     }
 
     async signIn(data: string, socketId: string) {
+        let users;
         if (data) {
-            this.users[socketId] = data;
-        }
-        if (!this.gameId) {
-            this.gameId = v4();
+            this.users.push({id: socketId, nickname: data});
         }
 
-        return await this.cacheService.getBoard();;
+        if (this.users.length === 2) {
+            users = this.users;
+        }
+        return {board: await this.cacheService.getBoard(), users}
     }
 
-    async getInitialState(data: any) {
-        let boardFilterArray: any[] = [];
+    async getInitialState(data: any[]) {
+        let boardFilterArray: Position[] = [];
             data.map((arr: Position[]) => {
                 boardFilterArray.push(...arr);
             })
-        return await this.createBoard(boardFilterArray)
+        await this.createBoard(boardFilterArray)
+        return {board: await cacheService.getBoard()}
     }
 
-    async sendToMove(data: any) {
+    async sendToMove(data: {userId: string, id: string}) {
         let board = await cacheService.getBoard();
         let resp: any;
         if (board.firesCount < 2) {
@@ -41,16 +40,17 @@ export class GameService {
             if (board.turn === 'oUser') {
                 throw new Error("forbidden turn")
             }
-                board.turn = 'oUser';
-                await this.move('X', board.boardArray[data.id], board);
-                resp = this.checkTheBoardState(board, 'X')
+            board.turn = 'oUser';
+            await this.move('X', board.boardArray[data.id], board);
+            resp = this.checkTheBoardState(board, 'X')
             } else if (data.userId === board.oUser_id) {
                 if (board.turn === 'xUser') {
                     throw new Error("forbidden turn")
                 }
                 board.turn = 'xUser';
                 await this.move('O', board.boardArray[data.id], board);
-                resp = this.checkTheBoardState(board, 'O')
+                resp = this.checkTheBoardState(board, 'O');
+
             }
             const info = [];
 
@@ -62,10 +62,10 @@ export class GameService {
                     info.push({message: 'update_board_table', data: board}, {message: 'the_last_emit', data: resp})
                     await this.clearCache()
                 default:
-                    info.push({message: 'turn_changed'}, {message: 'update_board_table', data: board});
+                    info.push({message: 'update_board_table', data: board});
             }
 
-            return {gameId: this.gameId, info};
+            return info;
         }
 
     async clearCache() {
@@ -73,12 +73,11 @@ export class GameService {
     }
 
     async end(socketId: string) {
-        const uid = this.getUidFromSocketID(socketId);
-
+        const uid = this.getUidFromSocketID(socketId)?.id;
         if (uid) {
-            delete this.users[uid];
+            this.users = this.users.filter((user: any) => user.id !== uid);
         }
-        return {gameId: this.gameId, userId: uid}
+        return uid;
     }
 
     async checkTheGameId(dataId: string, thisId: string) {
@@ -152,21 +151,28 @@ export class GameService {
 
         target.map((e) => {
             if (e === symbolsTarg) {
-                winningflag = {result: "win" ,userId: board[`${symbol}User_id` as keyof Board]};
+                let getUser = this.users.find((user: any) => user.id === board[`${symbol.toLowerCase()}User_id` as keyof Board])
+                winningflag = {result: "win", user: getUser };
                 return;
             }
         })
         return winningflag;
     }
 
-    getUidFromSocketID(id: string) {
-        return Object.keys(this.users).find((uid) => uid === id);
+    getUidFromSocketID(socketId: string) {
+        return this.users.find((user: any) => user.id === socketId);
     };
 
-    checkClientsOnSocket(count: number) {
-        if (!count) {
-            return cacheService.clear()
+    async checkUsersOnSocket() {
+        console.log(this.users)
+        if (!this.users.length) {
+           await cacheService.clear()
         }
+        
+    }
+
+    get getUsers() {
+        return this.users
     }
 }
 

@@ -1,16 +1,24 @@
-import React from 'react';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { toFilterBoardArray } from '../utils';
 
-export const FormPart = ({setCells, socket }) => {
+export const FormPart = ({setCells, socket, setUsers }) => {
   useEffect(() => {
     socket.on('get_initial_data', (data) => {
-      setCells(toFilterBoardArray(data.boardArray))
+        console.log(data)
+        if (data.board.boardArray) {
+            setCells(toFilterBoardArray(data.board.boardArray))
+        }
+        if (data.users) {
+            setUsers(data.users)
+        }
     })
-  },[])
+  }, [socket])
 
     const submitHandler = (e) => {
         e.preventDefault();
+        if(e.target[0].value < 3) {
+          return;
+        }
         let cellsCount = e.target[0].value;
         let board = [];
         for (let i = 0; i < cellsCount; ++i) {
