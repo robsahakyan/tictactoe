@@ -5,7 +5,6 @@ import { toFilterBoardArray } from '../utils';
 export const BorderPart = ({cellsArray, socket, setCells, setTurn, turn }) => {
     useEffect(() => {
         socket.on("update_board_table", (data) => {
-            console.log(data)
             setCells(toFilterBoardArray(data.boardArray));
         })
         socket.on('turn_changed', () => {

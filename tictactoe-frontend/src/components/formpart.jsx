@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { toFilterBoardArray } from '../utils';
+import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
 
 export const FormPart = ({setCells, socket, setUsers }) => {
   useEffect(() => {
     socket.on('get_initial_data', (data) => {
-        console.log(data)
         if (data.board.boardArray) {
             setCells(toFilterBoardArray(data.board.boardArray))
         }
@@ -37,12 +38,22 @@ export const FormPart = ({setCells, socket, setUsers }) => {
         socket.emit("send_initial_state", board);
     }
 
+    const validation = (e) => {
+      if (e.current.value > 2) {
+        return true
+      } 
+      return false
+    }
+
     return (
-        <form  onSubmit={submitHandler}>
-            <label htmlFor='inputText'>Enter count of cells:</label>
-            <br />
-            <input type='number' id='inputText'></input>
-            <button type='submit'>SEND</button>
-        </form>
+      <div className='d-flex flex-column align-items-center'>
+        <Form style={{ width: '20rem', paddingTop: '2rem'}}  onSubmit={submitHandler}>
+        <Form.Group>
+            <Form.Label>Enter count of cells</Form.Label>
+            <Form.Control type='number' />
+        </Form.Group>
+        <Button type='submit' style={{marginTop: '2rem'}}>Send</Button>
+        </Form>
+      </div>
     )
 }

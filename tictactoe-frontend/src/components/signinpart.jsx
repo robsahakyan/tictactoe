@@ -1,24 +1,24 @@
 import React from 'react';
-import { useEffect } from 'react';
-import { toFilterBoardArray } from '../utils';
+import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
 
 export const SignInPart = ({setForSignIn, socket, setCells, setUsers}) => {
 
     const submitHandler = (e) => {
-        if (!e.target[0].value) {
-            return;
-        }
         e.preventDefault();
         setForSignIn(true);
         socket.emit('sign_in', e.target[0].value)
     }
 
     return (
-        <form onSubmit={submitHandler}>
-            <label htmlFor='nickname'>Create nickname for game</label>
-            <br/>
-            <input type='text' id='nickname'></input>
-            <button type='submit'>SEND</button>
-        </form>
+        <div className='d-flex flex-column align-items-center'>
+            <Form style={{ width: '20rem', paddingTop: '2rem'}}  onSubmit={submitHandler}>
+            <Form.Group>
+                <Form.Label>Create nickname for game</Form.Label>
+                <Form.Control type='text' required/>
+            </Form.Group>
+            <Button type='submit' style={{marginTop: '2rem'}}>Send</Button>
+            </Form>
+        </div>
     )
 }

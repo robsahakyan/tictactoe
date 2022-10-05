@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { BorderPart } from './components/border';
 import { FormPart } from './components/formpart';
 import { connect } from 'react-redux'
@@ -19,17 +20,19 @@ function App({cellsArray, setCells, socket, setTurn, turn , isAuth, result, setF
     });
    socket.on('disconnect_excessive', () => {
      setToDisconnect(true);
-    socket.close()
+     socket.close()
    })
     socket.on('the_last_emit', (data) => {
       if (data.user) {
         setResult(`user ${data.user.nickname} wins`)
       } else {
-        setResult('draw')
+        setResult('draw');
       }
+      socket.close();
     })
     socket.on('opponent_disconnected', () => {
       setResult("your opponent has left the match")
+      socket.close();
     })
     socket.on('disconnect', () => {
       console.log("user disconnected")
